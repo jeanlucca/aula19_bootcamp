@@ -1,31 +1,19 @@
-# ===========================
-# Dockerfile para FastAPI + Poetry no Render
-# ===========================
-FROM python:3.10-slim
+FROM python:3.12
 
-# Define diretório de trabalho
-WORKDIR /app
+# Instalando o Poetry
+RUN pip install poetry
 
-# Instala dependências básicas
-RUN apt-get update && apt-get install -y curl build-essential && rm -rf /var/lib/apt/lists/*
+# Copiar o conteúdo do diretório atual para o contêiner
+COPY . /src
 
-# Instala o Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Definir o diretório de trabalho
+WORKDIR /src
 
-# Adiciona o Poetry ao PATH
-ENV PATH="/root/.local/bin:$PATH"
+# Instalar as dependências do projeto com Poetry
+RUN poetry install
 
-# Copia os arquivos de dependências
-COPY pyproject.toml poetry.lock* ./
+# Expor a porta em que a aplicação estará escutando
+EXPOSE 8501
 
-# Instala dependências do projeto
-RUN poetry install --no-root --no-interaction --no-ansi
-
-# Copia o restante do código
-COPY . .
-
-# Expõe a porta padrão do Render
-EXPOSE 10000
-
-# Comando para rodar o servidor FastAPI
-CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
+# Definir o entrypoint para executar o servidor Uvicorn
+ENTRYPOINT ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8501"]
